@@ -19,7 +19,7 @@ char *DASH_PATH;
 int
 main(int argc, char *argv[])
 {
-
+	setbuf(stdout, NULL);
 	int mode = INTERACTIVE_MODE; // defaults to interactive mode
 	if(argc == 2)
 		mode = BATCH_MODE;
@@ -79,6 +79,7 @@ main(int argc, char *argv[])
 			if(rc == 0) //child
 			{
 				char *executablefile = getAvailableFile(myargs[0]);
+				fprintf(stdout, "executablefile %s\n", executablefile);
 				if(executablefile == NULL)
 				{
 					printf("Sorry, command - %s not found\n", myargs[0]);
