@@ -59,15 +59,11 @@ main(int argc, char *argv[])
 				exit(0);
 	
 			// parse the command entered
-			for(argindex = 0, str1 = string; ; argindex++, str1 = NULL)
+			for(argindex = 0, str1 = string; ; str1 = NULL)
 			{
 				char *arg = strtok_r(str1, token_separator, &savepointer);
 				if(arg == NULL)
 					break;
-				if(argindex > 1)
-				{
-					myargs = realloc(myargs, sizeof(char*) * (argindex+1));
-				}
 				if (strcmp(arg,">")==0) {
 					redirection = 1;
 					continue;
@@ -75,8 +71,12 @@ main(int argc, char *argv[])
 				if (redirection) {
 					redirection = 0;
 					redirectionFile = arg;
+					continue;
+				} else if (argindex > 1) {
+					myargs = realloc(myargs, sizeof(char*) * (argindex+1));
 				}
 				myargs[argindex] = strdup(arg);
+				argindex++;
 			}
 			myargs[argindex] = NULL;
 
