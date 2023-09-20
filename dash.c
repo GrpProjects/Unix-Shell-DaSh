@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #include "defs.h"
 
@@ -12,7 +13,7 @@
 //extern char* DASH_PATH;
 
 char*
-getAvailableFile(char *filename);
+getAvailableFile(char *filename, char *path);
 
 char*
 validateAndGetFile(char *filename);
@@ -48,6 +49,8 @@ main(int argc, char *argv[])
 			printf("dash> ");
 			char **myargs = malloc(sizeof(char*) * 2);
 			int argindex;
+			bool redirection = 0;
+			char *redirectionFile = NULL;
 
 			getline(&string, &size, stdin);
 			string[strcspn(string, "\n")] = 0;
@@ -64,16 +67,50 @@ main(int argc, char *argv[])
 				if(argindex > 1)
 				{
 					myargs = realloc(myargs, sizeof(char*) * (argindex+1));
-				}	
+				}
+				if (strcmp(arg,">")==0) {
+					redirection = 1;
+					continue;
+				}
+				if (redirection) {
+					redirection = 0;
+					redirectionFile = arg;
+				}
 				myargs[argindex] = strdup(arg);
 			}
 			myargs[argindex] = NULL;
+
+			//redirection logic
+			int redirectionFileNo;
+			int saveOut; int saveErr;
+			if (redirectionFile!=NULL) {
+				redirectionFileNo = open(redirectionFile, O_RDWR|O_CREAT|O_TRUNC , 0600); //trucate if already file exits
+				if (redirectionFileNo == -1) {
+					char errMsg[50] = "Unable to create or open redirection file\n";
+					write(STDERR_FILENO, errMsg, strlen(errMsg));
+					exit(1);
+				}
+
+				saveOut = dup(fileno(stdout));
+				saveErr = dup(fileno(stderr));
+
+				if (dup2(redirectionFileNo, fileno(stdout)) == -1) {
+					char errMsg[30] = "Unable to redirect stdout\n";
+					write(STDERR_FILENO, errMsg, sizeof(errMsg));
+					exit(1);
+				}
+				if (dup2(redirectionFileNo, fileno(stderr)) == -1) {
+					char errMsg[30] = "Unable to redirect stderr\n";
+					write(STDERR_FILENO, errMsg, sizeof(errMsg));
+					exit(1);
+				}
+			}
 			
 			// fork and execv() the command
 			int rc = fork();
 			if(rc == 0) //child
 			{
-				char *executablefile = getAvailableFile(myargs[0]);
+				char *executablefile = getAvailableFile(myargs[0], DASH_PATH);
 				if(executablefile == NULL)
 				{
 					char errMsg[100] = "";
@@ -92,8 +129,19 @@ main(int argc, char *argv[])
 				wait(NULL);
 			}	
 
-			free(string); //crashing
+			// free(string); //crashing
 			string = NULL;
+
+			//revert redirection logic
+			if (redirectionFile!=NULL){
+				fflush(stdout); close(redirectionFileNo);
+
+				dup2(saveOut, fileno(stdout));
+				dup2(saveErr, fileno(stderr));
+
+				close(saveOut);
+				close(saveErr);
+			}
 		}
 
 		case BATCH_MODE:
@@ -127,9 +175,9 @@ getFilePath(char *filename, char *path)
 }
 
 char*
-getAvailableFile(char *filename)
+getAvailableFile(char *filename, char* path)
 {
-	char *filepath = getFilePath(filename, DASH_PATH);
+	char *filepath = getFilePath(filename, path);
 	int ret = access(filepath, X_OK);
 
 	if(ret == 0)
@@ -155,10 +203,8 @@ validateAndGetFile(char *filename)
 	}
 
 	//return if file exits
-	char *filepath = getFilePath(filename, ".");
-	int ret = access(filepath, X_OK);
-	if(ret != 0) {
-		free(filepath);
+	char *filepath = getAvailableFile(filename, ".");
+	if(filepath == NULL) {
 		char *errMsg = "Sorry! Batch file not found\n";
 		write(STDERR_FILENO, errMsg, strlen(errMsg));
 		exit(1);
