@@ -14,6 +14,9 @@
 char*
 getAvailableFile(char *filename);
 
+char*
+validateAndGetFile(char *filename);
+
 char *DASH_PATH;
 
 int
@@ -23,8 +26,10 @@ main(int argc, char *argv[])
 	int mode = INTERACTIVE_MODE; // defaults to interactive mode
 	if(argc == 2)
 		mode = BATCH_MODE;
-	else if(argc > 2)
+	else if(argc > 2) {
+		printf("Too many arguments: Either execute dash in interactive mode or by giving a single batch file\n");
 		return EXIT_FAILURE;
+	}
 		
 
 	char *string;
@@ -62,28 +67,19 @@ main(int argc, char *argv[])
 				}	
 				myargs[argindex] = strdup(arg);
 			}
-
 			myargs[argindex] = NULL;
 			
-			int i =0;
-			char *tmp = myargs[i++];
-	
-			while(tmp != NULL)
-			{
-				tmp = myargs[i++];
-			}		
-
 			// fork and execv() the command
-
 			int rc = fork();
 			if(rc == 0) //child
 			{
 				char *executablefile = getAvailableFile(myargs[0]);
-				fprintf(stdout, "executablefile %s\n", executablefile);
 				if(executablefile == NULL)
 				{
-					printf("Sorry, command - %s not found\n", myargs[0]);
-					exit(0);
+					char errMsg[100] = "";
+					snprintf(errMsg, sizeof(errMsg), "%s: command not found\n", myargs[0]);
+					write(STDERR_FILENO, errMsg, strlen(errMsg));
+					exit(1);
 				}
 				free(myargs[0]);
 				myargs[0] = executablefile;
@@ -101,6 +97,18 @@ main(int argc, char *argv[])
 		}
 
 		case BATCH_MODE:
+			char *batchFile = validateAndGetFile(argv[1]);
+			FILE *fstream = fopen(batchFile, "r");
+			if (fstream==NULL){
+				char *errMsg = "Unable to open the batch file\n";
+				write(STDERR_FILENO, errMsg, strlen(errMsg));
+				exit(1);
+			}
+			char *line;
+    		ssize_t read;
+			while ((read = getline(&line, &size, fstream)) != -1) {
+
+			}
 	
 		default:
 
@@ -130,4 +138,30 @@ getAvailableFile(char *filename)
 	}
 	free(filepath);
 	return NULL;
+}
+
+char*
+validateAndGetFile(char *filename)
+{
+	//first check the extension
+	char *ext;
+	char *dot = strrchr(filename, '.');
+	if(!dot || dot == filename) ext = "";
+	else ext = (char*) dot + 1;
+	if (strcmp(ext,"txt")!=0){
+		char *errMsg = "Batch file must be '.txt' file\n";
+ 		write(STDERR_FILENO, errMsg, strlen(errMsg));
+		exit(1);
+	}
+
+	//return if file exits
+	char *filepath = getFilePath(filename, ".");
+	int ret = access(filepath, X_OK);
+	if(ret != 0) {
+		free(filepath);
+		char *errMsg = "Sorry! Batch file not found\n";
+		write(STDERR_FILENO, errMsg, strlen(errMsg));
+		exit(1);
+	}
+	return filepath;
 }
