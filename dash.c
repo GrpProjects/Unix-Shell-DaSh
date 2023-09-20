@@ -14,7 +14,7 @@
 char*
 getAvailableFile(char *filename);
 
-char *DASH_PATH;
+char **DASH_PATH;
 
 int
 main(int argc, char *argv[])
@@ -31,9 +31,9 @@ main(int argc, char *argv[])
 	size_t size = 0;
 	char *token_separator = " ";
 	char *savepointer, *str1;
-
-	DASH_PATH = "/bin";
-	
+	DASH_PATH = malloc(sizeof(char*) * 2);
+	DASH_PATH[0] = "/bin";
+	DASH_PATH[1] = NULL;
 	switch(mode)
 	{
 		case INTERACTIVE_MODE:
@@ -47,9 +47,6 @@ main(int argc, char *argv[])
 			getline(&string, &size, stdin);
 			string[strcspn(string, "\n")] = 0;
 
-			if(strcmp(string, "exit") == 0)
-				exit(0);
-	
 			// parse the command entered
 			for(argindex = 0, str1 = string; ; argindex++, str1 = NULL)
 			{
@@ -71,10 +68,30 @@ main(int argc, char *argv[])
 			while(tmp != NULL)
 			{
 				tmp = myargs[i++];
+			}
+
+			if(strcmp(myargs[0], "exit") == 0)
+			{
+				exit(0);
+			}
+			else if(strcmp(myargs[0], "cd") == 0)
+			{
+				if(myargs[2] != NULL) //error
+					printf("Error: cd cannot have more than one argument\n");
+				else	
+					chdir(myargs[1]);
+				
+				continue;
+			}
+			else if(strcmp(myargs[0], "path") == 0)
+			{
+				DASH_PATH = myargs+1;
+				printf("DASH_PATH = %s\n", *DASH_PATH);
+				continue;
+					
 			}		
 
 			// fork and execv() the command
-
 			int rc = fork();
 			if(rc == 0) //child
 			{
@@ -121,13 +138,19 @@ getFilePath(char *filename, char *path)
 char*
 getAvailableFile(char *filename)
 {
-	char *filepath = getFilePath(filename, DASH_PATH);
-	int ret = access(filepath, X_OK);
-
-	if(ret == 0)
+	int index = 0;
+	while(DASH_PATH[index] != NULL)
 	{
-		return filepath;
+		char *filepath = getFilePath(filename, DASH_PATH[index]);
+		int ret = access(filepath, X_OK);
+
+		if(ret == 0)
+		{
+			return filepath;
+		}
+		free(filepath);
+		index++;
 	}
-	free(filepath);
+
 	return NULL;
 }
