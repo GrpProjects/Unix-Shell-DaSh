@@ -18,6 +18,9 @@ getAvailableFile(char *filename, char *path);
 char*
 validateAndGetFile(char *filename);
 
+void
+exitWithErr(char *errMsg);
+
 char *DASH_PATH;
 
 int
@@ -85,25 +88,16 @@ main(int argc, char *argv[])
 			int saveOut; int saveErr;
 			if (redirectionFile!=NULL) {
 				redirectionFileNo = open(redirectionFile, O_RDWR|O_CREAT|O_TRUNC , 0600); //trucate if already file exits
-				if (redirectionFileNo == -1) {
-					char errMsg[50] = "Unable to create or open redirection file\n";
-					write(STDERR_FILENO, errMsg, strlen(errMsg));
-					exit(1);
-				}
+				if (redirectionFileNo == -1) 
+					exitWithErr("Unable to create or open redirection file\n");
 
 				saveOut = dup(fileno(stdout));
 				saveErr = dup(fileno(stderr));
 
-				if (dup2(redirectionFileNo, fileno(stdout)) == -1) {
-					char errMsg[30] = "Unable to redirect stdout\n";
-					write(STDERR_FILENO, errMsg, sizeof(errMsg));
-					exit(1);
-				}
-				if (dup2(redirectionFileNo, fileno(stderr)) == -1) {
-					char errMsg[30] = "Unable to redirect stderr\n";
-					write(STDERR_FILENO, errMsg, sizeof(errMsg));
-					exit(1);
-				}
+				if (dup2(redirectionFileNo, fileno(stdout)) == -1)
+					exitWithErr("Unable to redirect stdout\n");
+				if (dup2(redirectionFileNo, fileno(stderr)) == -1)
+					exitWithErr("Unable to redirect stderr\n");
 			}
 			
 			// fork and execv() the command
@@ -115,8 +109,7 @@ main(int argc, char *argv[])
 				{
 					char errMsg[100] = "";
 					snprintf(errMsg, sizeof(errMsg), "%s: command not found\n", myargs[0]);
-					write(STDERR_FILENO, errMsg, strlen(errMsg));
-					exit(1);
+					exitWithErr(errMsg);
 				}
 				free(myargs[0]);
 				myargs[0] = executablefile;
@@ -147,11 +140,8 @@ main(int argc, char *argv[])
 		case BATCH_MODE:
 			char *batchFile = validateAndGetFile(argv[1]);
 			FILE *fstream = fopen(batchFile, "r");
-			if (fstream==NULL){
-				char *errMsg = "Unable to open the batch file\n";
-				write(STDERR_FILENO, errMsg, strlen(errMsg));
-				exit(1);
-			}
+			if (fstream==NULL)
+				exitWithErr("Unable to open the batch file\n");
 			char *line;
     		ssize_t read;
 			while ((read = getline(&line, &size, fstream)) != -1) {
@@ -196,18 +186,20 @@ validateAndGetFile(char *filename)
 	char *dot = strrchr(filename, '.');
 	if(!dot || dot == filename) ext = "";
 	else ext = (char*) dot + 1;
-	if (strcmp(ext,"txt")!=0){
-		char *errMsg = "Batch file must be '.txt' file\n";
- 		write(STDERR_FILENO, errMsg, strlen(errMsg));
-		exit(1);
-	}
+	if (strcmp(ext,"txt")!=0)
+		exitWithErr("Batch file must be '.txt' file\n");
 
 	//return if file exits
 	char *filepath = getAvailableFile(filename, ".");
-	if(filepath == NULL) {
-		char *errMsg = "Sorry! Batch file not found\n";
-		write(STDERR_FILENO, errMsg, strlen(errMsg));
-		exit(1);
-	}
+	if(filepath == NULL)
+		exitWithErr("Sorry! Batch file not found\n");
+
 	return filepath;
+}
+
+void
+exitWithErr(char *errMsg) 
+{
+	write(STDERR_FILENO, errMsg, strlen(errMsg));
+	exit(1);
 }
