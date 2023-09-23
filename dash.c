@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 	switch(mode)
 	{
 		case INTERACTIVE_MODE:
+		{
 			while(true)
 			{
 				printf("dash> ");
@@ -41,8 +42,9 @@ int main(int argc, char *argv[])
 				execute(strdup(string));
 			}
 			break;
-
+		}
 		case BATCH_MODE:
+		{
 			char *batchFile = validateAndGetFile(argv[1]);
 			FILE *fstream = fopen(batchFile, "r");
 			if (fstream==NULL)
@@ -57,6 +59,7 @@ int main(int argc, char *argv[])
 				execute(line);
 			}
 			break;
+		}
 		default:
 			break;
 
