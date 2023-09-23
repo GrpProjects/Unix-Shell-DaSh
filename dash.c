@@ -40,88 +40,105 @@ main(int argc, char *argv[])
 
 		while(true)
 		{
+			// prompt the user
 			printf("dash> ");
-			char **myargs = malloc(sizeof(char*) * 2);
 			int argindex;
 
+			// get user input
 			getline(&string, &size, stdin);
 			string[strcspn(string, "\n")] = 0;
+			char *string2 = strdup(string);
 
-			// parse the command entered
-			for(argindex = 0, str1 = string; ; argindex++, str1 = NULL)
+			// parse the commands entered
+			// handle parallel commands ( & operator)
+			int commandindex;
+			char *str2, *savepointer2;
+			char *commandseparator = "&";
+
+			for(commandindex = 0, str2 = string2; ; commandindex++, str2 = NULL)
 			{
-				char *arg = strtok_r(str1, token_separator, &savepointer);
-				if(arg == NULL)
+				char *cmd = strtok_r(str2, commandseparator, &savepointer2);
+				if(cmd == NULL)
 					break;
-				if(argindex > 1)
+
+				char **myargs = malloc(sizeof(char*) * 2);
+				for(argindex = 0, str1 = cmd; ; argindex++, str1 = NULL)
 				{
-					myargs = realloc(myargs, sizeof(char*) * (argindex+1));
-				}	
-				myargs[argindex] = strdup(arg);
-			}
+					char *arg = strtok_r(str1, token_separator, &savepointer);
+					if(arg == NULL)
+						break;
+					if(argindex > 1)
+					{
+						myargs = realloc(myargs, sizeof(char*) * (argindex+1));
+					}	
+					myargs[argindex] = strdup(arg);
+				}
 
-			myargs[argindex] = NULL;
-			
-			int i =0;
-			char *tmp = myargs[i++];
-	
-			while(tmp != NULL)
-			{
-				tmp = myargs[i++];
-			}
+				myargs[argindex] = NULL;
 
-			if(strcmp(myargs[0], "exit") == 0)
-			{
-				exit(0);
-			}
-			else if(strcmp(myargs[0], "cd") == 0)
-			{
-				if(myargs[2] != NULL) //error
-					printf("Error: cd cannot have more than one argument\n");
-				else	
-					chdir(myargs[1]);
-				
-				continue;
-			}
-			else if(strcmp(myargs[0], "path") == 0)
-			{
-				DASH_PATH = myargs+1;
-				printf("DASH_PATH = %s\n", *DASH_PATH);
-				continue;
-					
-			}		
-
-			// fork and execv() the command
-			int rc = fork();
-			if(rc == 0) //child
-			{
-				char *executablefile = getAvailableFile(myargs[0]);
-				fprintf(stdout, "executablefile %s\n", executablefile);
-				if(executablefile == NULL)
+				if(strcmp(myargs[0], "exit") == 0)
 				{
-					printf("Sorry, command - %s not found\n", myargs[0]);
 					exit(0);
 				}
-				free(myargs[0]);
-				myargs[0] = executablefile;
-				int res = execv(myargs[0], myargs);
-				if(res < 0)
-					perror("exec error");
+				else if(strcmp(myargs[0], "cd") == 0)
+				{
+					if(myargs[2] != NULL) //error
+						printf("Error: cd cannot have more than one argument\n");
+					else	
+						chdir(myargs[1]);
+
+					continue;
+				}
+				else if(strcmp(myargs[0], "path") == 0)
+				{
+					DASH_PATH = myargs+1;
+					printf("DASH_PATH = %s\n", *DASH_PATH);
+					continue;
+
+				}		
+
+				// fork and execv() the command
+				int rc = fork();
+				if(rc == 0) //child
+				{
+					char *executablefile = getAvailableFile(myargs[0]);
+					if(executablefile == NULL)
+					{
+						printf("Sorry, command - %s not found\n", myargs[0]);
+						exit(0);
+					}
+					free(myargs[0]);
+					myargs[0] = executablefile;
+					int res = execv(myargs[0], myargs);
+					if(res < 0)
+						perror("exec error");
+				}
+				else
+				{
+					int cid;
+					do
+					{
+						cid = wait(NULL);
+						printf("child %d finished\n", cid);
+					}while(cid > 0);
+				}
 			}
-			else
-			{
-				wait(NULL);
-			}	
+
+				
 
 			free(string); //crashing
 			string = NULL;
 		}
+		break;
 
 		case BATCH_MODE:
+		break;
 	
 		default:
-
+		break;
 	}
+
+	return EXIT_SUCCESS;
 }
 
 char*
