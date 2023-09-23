@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 				string[strcspn(string, "\n")] = 0;
 				execute(strdup(string));
 			}
+			break;
 
 		case BATCH_MODE:
 			char *batchFile = validateAndGetFile(argv[1]);
@@ -55,7 +56,9 @@ int main(int argc, char *argv[])
        			}
 				execute(line);
 			}
+			break;
 		default:
+			break;
 
 	}
 }
