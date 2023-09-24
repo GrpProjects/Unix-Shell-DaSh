@@ -1,2 +1,7 @@
 ls
 ls
+clear
+ls>out
+ls
+rm out
+
