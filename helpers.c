@@ -8,7 +8,7 @@ void initDashpath();
 char* getFilePath(char *filename, char *path);
 char* getAvailableFile(char *filename, char* path);
 char* getAvailableFileInDashPath(char *filename);
-char* validateAndGetFile(char *filename);
+char* validateAndGetFile(char *file);
 char* refineRedirectionArgs1(char *arg);
 char* refineRedirectionArgs2(char *arg);
 
@@ -74,22 +74,26 @@ char* getAvailableFileInDashPath(char *filename)
 	}
 }
 
-char* validateAndGetFile(char *filename)
+char* validateAndGetFile(char *file)
 {
-	//first check the extension
-	char *ext;
-	char *dot = strrchr(filename, '.');
-	if(!dot || dot == filename) ext = "";
-	else ext = (char*) dot + 1;
-	if (strcmp(ext,"txt")!=0)
+	char *lastSlash = strrchr(file, '/');
+	char *fileName; 
+	char *filePath;
+	if (lastSlash != NULL) {
+		size_t lastSlashPos = lastSlash - file;
+		filePath = (char*) malloc(lastSlashPos + 1);
+		strncpy(filePath, file, lastSlashPos);
+		filePath[lastSlashPos] = '\0';
+		fileName = lastSlash + 1;
+	} else {
+		exitWithErr();
+	}
+
+	char *availabeFile = getAvailableFile(fileName, filePath);
+	if(availabeFile == NULL)
 		exitWithErr();
 
-	//return if file exits
-	char *filepath = getAvailableFile(filename, ".");
-	if(filepath == NULL)
-		exitWithErr();
-
-	return filepath;
+	return file;
 }
 
 char* refineRedirectionArgs1(char *arg)
