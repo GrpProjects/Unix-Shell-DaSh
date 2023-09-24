@@ -81,10 +81,8 @@ void execute(char *string) {
 			free(myargs[0]);
 			myargs[0] = executablefile;
 			int res = execv(myargs[0], myargs);
-			if(res < 0) {
-				perror("exec error");
-				exit(1);
-			}
+			if(res < 0)
+				exitWithErr();
 		} else {
 			int cid;
 			while((cid = wait(NULL)) > 0); //wait for all child processes to finish
