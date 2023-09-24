@@ -2,6 +2,7 @@
 
 extern char **DASH_PATH;
 
+void throwErr();
 void exitWithErr();
 void freeArgs(char **args);
 void initDashpath();
@@ -12,11 +13,16 @@ char* validateAndGetFile(char *file);
 char* refineRedirectionArgs1(char *arg);
 char* refineRedirectionArgs2(char *arg);
 
-void exitWithErr() 
+void throwErr()
 {
 	char error_message[30] = "An error has occurred\n";
-    write(STDERR_FILENO, error_message, strlen(error_message));
-    exit(1);
+    	write(STDERR_FILENO, error_message, strlen(error_message));
+}
+
+void exitWithErr() 
+{
+	throwErr();	
+    	exit(1);
 }
 
 void freeArgs(char **args)
@@ -72,6 +78,7 @@ char* getAvailableFileInDashPath(char *filename)
 		}
 		index++;
 	}
+	return NULL;
 }
 
 char* validateAndGetFile(char *file)

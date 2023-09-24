@@ -37,7 +37,7 @@ void execute(char *string) {
 				redirectionFile = refineRedirectionArgs1(arg);    // ls > out   (arg=out)
 				continue;
 			} else if (argindex > 1) {
-				myargs = realloc(myargs, sizeof(char*) * (argindex+1));
+				myargs = realloc(myargs, sizeof(char*) * (argindex + 2));
 			}
 
 			if (arg[0] == '>') {

@@ -14,12 +14,16 @@ void handleBuiltInCommand(char **myargs)
 {
 	if(strcmp(myargs[0], BUILTIN_EXIT) == 0)
 	{
+		if(myargs[1] != NULL)
+		{
+			exitWithErr();
+		}
 		exit(0);
 	}
 	else if(strcmp(myargs[0], BUILTIN_CD) == 0)
 	{
 		if(myargs[2] != NULL) //error
-			printf("Error: cd cannot have more than one argument\n");
+			throwErr();
 		else	
 			chdir(myargs[1]);
 		freeArgs(myargs);
