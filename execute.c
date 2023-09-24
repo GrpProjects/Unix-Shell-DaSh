@@ -1,3 +1,5 @@
+#include "redirection.c"
+
 void execute(char *string);
 
 void execute(char *string) {
@@ -51,33 +53,16 @@ void execute(char *string) {
 			continue;
 		}
 
-		//redirection logic
-		int redirectionFileNo;
-		int saveOut; int saveErr;
-		if (redirectionFile!=NULL) {
-			redirectionFileNo = open(redirectionFile, O_RDWR|O_CREAT|O_TRUNC , 0600); //trucate if already file exits
-			if (redirectionFileNo == -1) 
-				exitWithErr("Unable to create or open redirection file\n");
-
-			saveOut = dup(fileno(stdout));
-			saveErr = dup(fileno(stderr));
-
-			if (dup2(redirectionFileNo, fileno(stdout)) == -1)
-				exitWithErr("Unable to redirect stdout\n");
-			if (dup2(redirectionFileNo, fileno(stderr)) == -1)
-				exitWithErr("Unable to redirect stderr\n");
-		}
+		if (redirectionFile!=NULL)
+			redirectToFile(redirectionFile);
 		
 		// fork and execv() the command
 		int rc = fork();
 		if(rc == 0) //child
 		{
 			char *executablefile =  getAvailableFileInDashPath(myargs[0]);
-			if(executablefile == NULL) {
-				char errMsg[100] = "";
-				snprintf(errMsg, sizeof(errMsg), "%s: command not found\n", myargs[0]);
-				exitWithErr(errMsg);
-			}
+			if(executablefile == NULL)
+				exitWithErr();
 			free(myargs[0]);
 			myargs[0] = executablefile;
 			int res = execv(myargs[0], myargs);
@@ -91,15 +76,7 @@ void execute(char *string) {
 		// free(string); //crashing
 		string = NULL;
 
-		//revert redirection logic to normal
-		if (redirectionFile!=NULL){
-			fflush(stdout); close(redirectionFileNo);
-
-			dup2(saveOut, fileno(stdout));
-			dup2(saveErr, fileno(stderr));
-
-			close(saveOut);
-			close(saveErr);
-		}
+		if (redirectionFile!=NULL) 
+			switchRedirectionBack();
 	}
 }
