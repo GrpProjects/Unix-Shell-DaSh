@@ -34,15 +34,19 @@ void execute(char *string) {
 			}
 			if (redirection) {
 				redirection = 0;
-				redirectionFile = refineRedirectionArgs1(arg);
+				redirectionFile = refineRedirectionArgs1(arg);    // ls > out   (arg=out)
 				continue;
 			} else if (argindex > 1) {
 				myargs = realloc(myargs, sizeof(char*) * (argindex+1));
 			}
 
-			redirectionFile = refineRedirectionArgs2(arg);
+			if (arg[0] == '>') {
+				redirectionFile = refineRedirectionArgs1(strdup(++arg));
+				continue;
+			}
+			else redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg=ls>out)
 
-			myargs[argindex] = strdup(arg);
+			myargs[argindex] = strdup(arg); //ls
 			argindex++;
 		}
 		myargs[argindex] = NULL;

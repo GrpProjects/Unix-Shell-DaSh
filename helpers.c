@@ -102,7 +102,7 @@ char* refineRedirectionArgs1(char *arg)
 
 char* refineRedirectionArgs2(char *arg)
 {
-	//to support redirection without spaces
+	//to support redirection without 
 	int i; char* str; char* savepointer; char* redirectionFile = NULL;
 	for (i=0, str = arg; ; str=NULL, i++)
 	{
