@@ -8,5 +8,6 @@
 #define BUILTIN_CD "cd"
 #define BUILTIN_PATH "path"
 
+extern char **DASH_PATH;
 
 #endif

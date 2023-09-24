@@ -1,6 +1,5 @@
 #include "defs.h"
 
-extern char **DASH_PATH;
 
 void throwErr();
 void exitWithErr();
@@ -39,10 +38,19 @@ void freeArgs(char **args)
 void initDashpath()
 {
 	DASH_PATH = malloc(sizeof(char*) * 2);
-	DASH_PATH[0] = "/bin";
+	DASH_PATH[0] = strdup("/bin");
 	DASH_PATH[1] = NULL;
 }
 
+void clearDashPath()
+{
+	int index = 0;
+	while(DASH_PATH[index] != NULL)
+	{
+		free(DASH_PATH[index]);
+		index++;
+	}
+}
 
 char* getFilePath(char *filename, char *path)
 {
@@ -73,7 +81,8 @@ char* getAvailableFileInDashPath(char *filename)
 	while(DASH_PATH[index] != NULL)
 	{
 		char *filepath = getAvailableFile(filename, DASH_PATH[index]);
-		if (filepath!=NULL) {
+		if (filepath!=NULL) 
+		{
 			return filepath;
 		}
 		index++;
@@ -86,13 +95,16 @@ char* validateAndGetFile(char *file)
 	char *lastSlash = strrchr(file, '/');
 	char *fileName; 
 	char *filePath;
-	if (lastSlash != NULL) {
+	if(lastSlash != NULL)
+	{
 		size_t lastSlashPos = lastSlash - file;
 		filePath = (char*) malloc(lastSlashPos + 1);
 		strncpy(filePath, file, lastSlashPos);
 		filePath[lastSlashPos] = '\0';
 		fileName = lastSlash + 1;
-	} else {
+	} 
+	else 
+	{
 		exitWithErr();
 	}
 
@@ -106,7 +118,9 @@ char* validateAndGetFile(char *file)
 char* refineRedirectionArgs1(char *arg)
 {
 	char *refinedArg = refineRedirectionArgs2(arg);
-	if (refinedArg == NULL) return arg;
+	if(refinedArg == NULL) 
+		return arg;
+
 	return refinedArg;
 }
 
@@ -115,12 +129,16 @@ char* refineRedirectionArgs2(char *arg)
 {
 	//to support redirection without 
 	int i; char* str; char* savepointer; char* redirectionFile = NULL;
-	for (i=0, str = arg; ; str=NULL, i++)
+	for(i=0, str = arg; ; str=NULL, i++)
 	{
 		char *refinedArg = strtok_r(str, ">", &savepointer);
-		if (refinedArg == NULL) break;
-		if (i==0) arg = refinedArg;
-		else redirectionFile = refinedArg;
+		if(refinedArg == NULL) 
+			break;
+		if(i == 0) 
+			arg = refinedArg;
+		else 
+			redirectionFile = refinedArg;
 	}
+
 	return redirectionFile;
 }

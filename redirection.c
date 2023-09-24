@@ -4,7 +4,8 @@ void switchRedirectionBack();
 int redirectionFileNo;
 int saveOut; int saveErr;
 
-void redirectToFile(char *redirectionFile) {
+void redirectToFile(char *redirectionFile) 
+{
     redirectionFileNo = open(redirectionFile, O_RDWR|O_CREAT|O_TRUNC , 0600); //trucate if already file exits
     if (redirectionFileNo == -1) 
         exitWithErr();
@@ -18,8 +19,10 @@ void redirectToFile(char *redirectionFile) {
         exitWithErr();
 }
 
-void switchRedirectionBack() {
-    fflush(stdout); close(redirectionFileNo);
+void switchRedirectionBack() 
+{
+    fflush(stdout); 
+    close(redirectionFileNo);
 
     dup2(saveOut, fileno(stdout));
     dup2(saveErr, fileno(stderr));

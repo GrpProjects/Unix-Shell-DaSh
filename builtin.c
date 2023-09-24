@@ -16,20 +16,37 @@ void handleBuiltInCommand(char **myargs)
 	{
 		if(myargs[1] != NULL)
 		{
-			exitWithErr();
+			throwErr();
 		}
-		exit(0);
+		else
+		{
+			int cid;
+			while((cid = wait(NULL)) > 0); //wait for all child processes to finish. To avoid Orphan processes
+			exit(0);
+		}
 	}
 	else if(strcmp(myargs[0], BUILTIN_CD) == 0)
 	{
-		if(myargs[2] != NULL) //error
+		if(myargs[2] != NULL)
 			throwErr();
 		else	
 			chdir(myargs[1]);
-		freeArgs(myargs);
+
 	}
 	else if(strcmp(myargs[0], BUILTIN_PATH) == 0)
 	{
-		DASH_PATH = myargs+1;
+		// clear existing dash path
+		clearDashPath();
+		
+		// copying new paths to dash path
+		int argindex = 1;
+		while(myargs[argindex] != NULL)
+		{
+			DASH_PATH = realloc(DASH_PATH, sizeof(char*) * (argindex + 1));
+			DASH_PATH[argindex-1] = strdup(myargs[argindex]);
+			argindex++;
+		}
+		DASH_PATH[argindex-1] = NULL;
+		
 	}
 }

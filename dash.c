@@ -22,7 +22,6 @@ int main(int argc, char *argv[])
 		mode = BATCH_MODE;
 	else if(argc > 2) {
 		exitWithErr();
-		return EXIT_FAILURE;
 	}
 	
 	initDashpath();
@@ -33,13 +32,16 @@ int main(int argc, char *argv[])
 		{
 			while(true)
 			{
+				// prompt the user
 				printf("dash> ");
-
+				
+				// get input from user
 				char *string;
 				size_t size = 0;
 				getline(&string, &size, stdin);
 				string[strcspn(string, "\n")] = 0;
-				execute(strdup(string));
+				execute(string);
+				free(string);
 			}
 			break;
 		}
@@ -47,21 +49,22 @@ int main(int argc, char *argv[])
 		{
 			char *batchFile = validateAndGetFile(argv[1]);
 			FILE *fstream = fopen(batchFile, "r");
-			if (fstream==NULL)
+			if(fstream==NULL)
 				exitWithErr();
 			char *line;
-    		ssize_t read;
+    			ssize_t read;
 			size_t size = 0;
-			while ((read = getline(&line, &size, fstream)) != -1) {
-				if (line[read - 1] == '\n') {
-            		line[read - 1] = '\0';
-       			}
+			while((read = getline(&line, &size, fstream)) != -1) 
+			{
+				if(line[read - 1] == '\n')
+				{
+            				line[read - 1] = '\0';
+       				}
 				execute(line);
 			}
 			break;
 		}
-		default:
-			break;
-
 	}
+
+	return EXIT_SUCCESS;
 }

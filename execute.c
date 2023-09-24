@@ -2,16 +2,17 @@
 
 void execute(char *string);
 
-void execute(char *string) {
+void execute(char *string) 
+{
 	int argindex;
 	int commandindex;
 
-	char *token_separator = " ";
+	char *token_separator = " \t";
 	char *str1, *savepointer;
 	char *str2, *savepointer2;
 	char *commandseparator = "&";
 
-	bool redirection = 0;
+	bool redirection = false;
 	char *redirectionFile = NULL;
 
 	// parse the command entered
@@ -27,24 +28,33 @@ void execute(char *string) {
 		for(argindex = 0, str1 = cmd; ; str1 = NULL)
 		{
 			char *arg = strtok_r(str1, token_separator, &savepointer);
-			if(arg == NULL) break;
-			if (strcmp(arg,">")==0) {
-				redirection = 1;
+			if(arg == NULL)
+				break;
+			if(strcmp(arg,">") == 0)
+			{
+				redirection = true;
 				continue;
 			}
-			if (redirection) {
-				redirection = 0;
+			if(redirection) 
+			{
+				redirection = false;
 				redirectionFile = refineRedirectionArgs1(arg);    // ls > out   (arg=out)
 				continue;
-			} else if (argindex > 1) {
+			}
+			else if(argindex >= 1) 
+			{
 				myargs = realloc(myargs, sizeof(char*) * (argindex + 2));
 			}
 
-			if (arg[0] == '>') {
+			if (arg[0] == '>') 
+			{
 				redirectionFile = refineRedirectionArgs1(strdup(++arg)); // ls >out (arg = >out)
 				continue;
 			}
-			else redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg = ls>out); after changes -> arg = ls, redirection file = out;
+			else 
+			{
+				redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg = ls>out); after changes -> arg = ls, redirection file = out;
+			}
 
 			myargs[argindex] = strdup(arg); //ls
 			argindex++;
@@ -54,10 +64,11 @@ void execute(char *string) {
 		if(isBuiltInCommand(myargs[0]))
 		{
 			handleBuiltInCommand(myargs);
+			freeArgs(myargs);
 			continue;
 		}
 
-		if (redirectionFile!=NULL)
+		if (redirectionFile != NULL)
 			redirectToFile(redirectionFile);
 		
 		// fork and execv() the command
@@ -67,20 +78,19 @@ void execute(char *string) {
 			char *executablefile =  getAvailableFileInDashPath(myargs[0]);
 			if(executablefile == NULL)
 				exitWithErr();
-			free(myargs[0]);
-			myargs[0] = executablefile;
-			int res = execv(myargs[0], myargs);
+
+			int res = execv(executablefile, myargs);
 			if(res < 0)
 				exitWithErr();
-		} else {
-			int cid;
-			while((cid = wait(NULL)) > 0); //wait for all child processes to finish
-		}	
-
-		// free(string); //crashing
-		string = NULL;
+		} 
 
 		if (redirectionFile!=NULL) 
 			switchRedirectionBack();
+
+		freeArgs(myargs);
 	}
+
+	int cid;
+	while((cid = wait(NULL)) > 0); //wait for all child processes to finish
+
 }
