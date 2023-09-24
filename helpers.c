@@ -9,6 +9,8 @@ char* getFilePath(char *filename, char *path);
 char* getAvailableFile(char *filename, char* path);
 char* getAvailableFileInDashPath(char *filename);
 char* validateAndGetFile(char *filename);
+char* refineRedirectionArgs1(char *arg);
+char* refineRedirectionArgs2(char *arg);
 
 void exitWithErr() 
 {
@@ -88,4 +90,26 @@ char* validateAndGetFile(char *filename)
 		exitWithErr();
 
 	return filepath;
+}
+
+char* refineRedirectionArgs1(char *arg)
+{
+	char *refinedArg = refineRedirectionArgs2(arg);
+	if (refinedArg == NULL) return arg;
+	return refinedArg;
+}
+
+
+char* refineRedirectionArgs2(char *arg)
+{
+	//to support redirection without spaces
+	int i; char* str; char* savepointer; char* redirectionFile = NULL;
+	for (i=0, str = arg; ; str=NULL, i++)
+	{
+		char *refinedArg = strtok_r(str, ">", &savepointer);
+		if (refinedArg == NULL) break;
+		if (i==0) arg = refinedArg;
+		else redirectionFile = refinedArg;
+	}
+	return redirectionFile;
 }

@@ -25,19 +25,21 @@ void execute(char *string) {
 		for(argindex = 0, str1 = cmd; ; str1 = NULL)
 		{
 			char *arg = strtok_r(str1, token_separator, &savepointer);
-			if(arg == NULL)
-				break;
+			if(arg == NULL) break;
 			if (strcmp(arg,">")==0) {
 				redirection = 1;
 				continue;
 			}
 			if (redirection) {
 				redirection = 0;
-				redirectionFile = arg;
+				redirectionFile = refineRedirectionArgs1(arg);
 				continue;
 			} else if (argindex > 1) {
 				myargs = realloc(myargs, sizeof(char*) * (argindex+1));
 			}
+
+			redirectionFile = refineRedirectionArgs2(arg);
+
 			myargs[argindex] = strdup(arg);
 			argindex++;
 		}
