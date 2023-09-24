@@ -41,10 +41,10 @@ void execute(char *string) {
 			}
 
 			if (arg[0] == '>') {
-				redirectionFile = refineRedirectionArgs1(strdup(++arg));
+				redirectionFile = refineRedirectionArgs1(strdup(++arg)); // ls >out (arg = >out)
 				continue;
 			}
-			else redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg=ls>out)
+			else redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg = ls>out); after changes -> arg = ls, redirection file = out;
 
 			myargs[argindex] = strdup(arg); //ls
 			argindex++;
