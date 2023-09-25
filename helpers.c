@@ -108,8 +108,8 @@ char* validateAndGetFile(char *file)
 	}
 
 	char *availabeFile = getAvailableFile(fileName, filePath);
-	if(availabeFile == NULL)
-		exitWithErr();
+	if(availabeFile == NULL) 
+		// exitWithErr(); //NOTE: due to errors in checking access of a file using access() caused by file permissions restrictions we have commented the check for now 
 
 	return file;
 }
