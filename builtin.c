@@ -27,10 +27,14 @@ void handleBuiltInCommand(char **myargs)
 	}
 	else if(strcmp(myargs[0], BUILTIN_CD) == 0)
 	{
+		int ret = 0;
 		if(myargs[2] != NULL)
 			throwErr();
 		else	
-			chdir(myargs[1]);
+			ret = chdir(myargs[1]);
+
+		if(ret < 0)
+			throwErr();
 
 	}
 	else if(strcmp(myargs[0], BUILTIN_PATH) == 0)
