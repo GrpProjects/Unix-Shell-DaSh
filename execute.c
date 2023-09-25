@@ -32,29 +32,39 @@ void execute(char *string)
 				break;
 			if(strcmp(arg,">") == 0)
 			{
-				redirection = true;
+				if (!redirection)
+					redirection = true;
+				else {
+					throwErr();
+					return;
+				}
 				continue;
 			}
 			if(redirection) 
 			{
-				redirection = false;
-				redirectionFile = refineRedirectionArgs1(arg);    // ls > out   (arg=out)
+				if (strchr(arg, '>')!=NULL) {
+					throwErr();
+					return;
+				}
+				redirectionFile = arg;
 				continue;
 			}
 			else if(argindex >= 1) 
 			{
 				myargs = realloc(myargs, sizeof(char*) * (argindex + 2));
 			}
-
-			if (arg[0] == '>') 
-			{
-				redirectionFile = refineRedirectionArgs1(strdup(++arg)); // ls >out (arg = >out)
-				continue;
+			
+			int count=0;
+			char *reStr = strchr(arg, '>');
+			while (reStr != NULL) {
+				count++;
+				if (count>1){
+					throwErr();
+					return;
+				}
+				reStr = strchr(reStr + 1, '>'); // Search for the next occurrence
 			}
-			else 
-			{
-				redirectionFile = refineRedirectionArgs2(arg);  // ls>out (arg = ls>out); after changes -> arg = ls, redirection file = out;
-			}
+			redirectionFile = refineRedirectionArgs(arg);  // ls>out (arg = ls>out); after changes -> arg = ls, redirection file = out;
 
 			myargs[argindex] = strdup(arg); //ls
 			argindex++;

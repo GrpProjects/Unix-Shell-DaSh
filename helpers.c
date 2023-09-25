@@ -9,13 +9,12 @@ char* getFilePath(char *filename, char *path);
 char* getAvailableFile(char *filename, char* path);
 char* getAvailableFileInDashPath(char *filename);
 char* validateAndGetFile(char *file);
-char* refineRedirectionArgs1(char *arg);
-char* refineRedirectionArgs2(char *arg);
+char* refineRedirectionArgs(char *arg);
 
 void throwErr()
 {
 	char error_message[30] = "An error has occurred\n";
-    	write(STDERR_FILENO, error_message, strlen(error_message));
+    write(STDERR_FILENO, error_message, strlen(error_message));
 }
 
 void exitWithErr() 
@@ -115,17 +114,8 @@ char* validateAndGetFile(char *file)
 	return file;
 }
 
-char* refineRedirectionArgs1(char *arg)
-{
-	char *refinedArg = refineRedirectionArgs2(arg);
-	if(refinedArg == NULL) 
-		return arg;
 
-	return refinedArg;
-}
-
-
-char* refineRedirectionArgs2(char *arg)
+char* refineRedirectionArgs(char *arg)
 {
 	//to support redirection without 
 	int i; char* str; char* savepointer; char* redirectionFile = NULL;
@@ -134,8 +124,6 @@ char* refineRedirectionArgs2(char *arg)
 		char *refinedArg = strtok_r(str, ">", &savepointer);
 		if(refinedArg == NULL) 
 			break;
-		if (i>1)
-			throwErr();
 		if(i == 0) 
 			arg = refinedArg;
 		else 
