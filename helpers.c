@@ -134,6 +134,8 @@ char* refineRedirectionArgs2(char *arg)
 		char *refinedArg = strtok_r(str, ">", &savepointer);
 		if(refinedArg == NULL) 
 			break;
+		if (i>1)
+			throwErr();
 		if(i == 0) 
 			arg = refinedArg;
 		else 
