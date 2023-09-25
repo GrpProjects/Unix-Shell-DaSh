@@ -58,8 +58,8 @@ int main(int argc, char *argv[])
 			{
 				if(line[read - 1] == '\n')
 				{
-            				line[read - 1] = '\0';
-       				}
+            		line[read - 1] = '\0';
+       			}
 				execute(line);
 			}
 			break;
